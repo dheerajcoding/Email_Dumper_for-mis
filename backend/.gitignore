@@ -1,0 +1,9 @@
+node_modules/
+.env
+uploads/*.xlsx
+uploads/*.xls
+!uploads/.gitkeep
+*.log
+.DS_Store
+credentials.json
+token.json
