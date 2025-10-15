@@ -25,16 +25,29 @@ class SyncController {
       for (const fileInfo of downloadedFiles) {
         try {
           console.log(`Processing: ${fileInfo.filename}`);
+          console.log(`File path: ${fileInfo.filePath}`);
+
+          // Verify file exists before processing
+          const fs = require('fs-extra');
+          if (!await fs.pathExists(fileInfo.filePath)) {
+            console.error(`❌ File not found: ${fileInfo.filePath}`);
+            errors.push({
+              file: fileInfo.filename,
+              error: 'File not found after download'
+            });
+            continue;
+          }
 
           // Extract data
           const customerData = excelService.extractCustomerData(fileInfo.filePath);
+          console.log(`Extracted ${customerData.length} records from ${fileInfo.filename}`);
           totalRecords += customerData.length;
 
-          // Upsert to database
-          const results = await databaseService.bulkUpsertCustomers(customerData);
+          // INSERT ALL data including duplicates to track all versions
+          const results = await databaseService.bulkInsertAllCustomers(customerData);
           created += results.created;
-          updated += results.updated;
-          unchanged += results.unchanged;
+          
+          console.log(`✅ Inserted: ${results.created} records (${results.duplicates} duplicates)`);
           
           if (results.errors.length > 0) {
             errors.push(...results.errors);
@@ -42,10 +55,11 @@ class SyncController {
 
           filesProcessed.push(fileInfo.filename);
 
-          // Delete file after processing
+          // Delete file after successful processing
           await excelService.deleteFile(fileInfo.filePath);
         } catch (error) {
           console.error(`Error processing ${fileInfo.filename}:`, error.message);
+          console.error('Stack trace:', error.stack);
           errors.push({
             file: fileInfo.filename,
             error: error.message
@@ -71,8 +85,8 @@ class SyncController {
           filesProcessed: filesProcessed.length,
           totalRecords,
           created,
-          updated,
-          unchanged,
+          updated: 0, // No longer updating, only inserting
+          unchanged: 0, // No longer tracking unchanged
           errors,
           syncTime: syncLog.syncTime
         }

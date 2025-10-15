@@ -11,15 +11,87 @@ class ExcelService {
       // Read the workbook
       const workbook = XLSX.readFile(filePath);
 
-      // Get the first sheet
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+      console.log(`Available sheets: ${workbook.SheetNames.join(', ')}`);
 
-      // Convert to JSON
-      const data = XLSX.utils.sheet_to_json(worksheet, {
+      // Find the sheet with "PROPOSAL NUMBER" header
+      let targetSheetName = null;
+      for (const sheetName of workbook.SheetNames) {
+        const worksheet = workbook.Sheets[sheetName];
+        const rawData = XLSX.utils.sheet_to_json(worksheet, {
+          header: 1,
+          raw: false,
+          defval: ''
+        });
+
+        // Check if this sheet has "PROPOSAL NUMBER" in any of the first 10 rows
+        for (let i = 0; i < Math.min(10, rawData.length); i++) {
+          const row = rawData[i];
+          if (row && row.some(cell => 
+            cell && typeof cell === 'string' && 
+            cell.toUpperCase().includes('PROPOSAL')
+          )) {
+            targetSheetName = sheetName;
+            console.log(`Found data in sheet: "${sheetName}"`);
+            break;
+          }
+        }
+
+        if (targetSheetName) break;
+      }
+
+      // If no sheet with "PROPOSAL NUMBER" found, use the second sheet if available, otherwise first
+      if (!targetSheetName) {
+        targetSheetName = workbook.SheetNames.length > 1 ? workbook.SheetNames[1] : workbook.SheetNames[0];
+        console.log(`Using sheet: "${targetSheetName}" (no PROPOSAL column found, using default)`);
+      }
+
+      const worksheet = workbook.Sheets[targetSheetName];
+
+      // Convert to JSON without assuming first row is header
+      const rawData = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1, // Return array of arrays
         raw: false,
         defval: ''
       });
+
+      console.log(`Total rows in sheet: ${rawData.length}`);
+
+      // Find the header row (row that contains "PROPOSAL NUMBER")
+      let headerRowIndex = -1;
+      for (let i = 0; i < Math.min(10, rawData.length); i++) {
+        const row = rawData[i];
+        if (row && row.some(cell => 
+          cell && typeof cell === 'string' && 
+          cell.toUpperCase().includes('PROPOSAL')
+        )) {
+          headerRowIndex = i;
+          console.log(`Found header row at row: ${i + 1}`);
+          break;
+        }
+      }
+
+      if (headerRowIndex === -1) {
+        console.warn('Could not find header row with "PROPOSAL NUMBER". Using row 1 as header.');
+        headerRowIndex = 0;
+      }
+
+      // Extract header row
+      const headers = rawData[headerRowIndex];
+      console.log(`Found ${headers.filter(h => h).length} columns`);
+
+      // Extract data rows (everything after header row)
+      const dataRows = rawData.slice(headerRowIndex + 1);
+
+      // Convert to objects with headers as keys
+      const data = dataRows.map(row => {
+        const obj = {};
+        headers.forEach((header, index) => {
+          if (header && header.trim()) {
+            obj[header.trim()] = row[index] || '';
+          }
+        });
+        return obj;
+      }).filter(obj => Object.keys(obj).length > 0); // Remove empty rows
 
       console.log(`Extracted ${data.length} records from Excel file`);
       return data;

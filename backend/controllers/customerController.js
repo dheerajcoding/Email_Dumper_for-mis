@@ -19,8 +19,10 @@ class CustomerController {
       
       res.json({
         success: true,
-        data: result.customers,
-        pagination: result.pagination
+        data: {
+          customers: result.customers,
+          pagination: result.pagination
+        }
       });
     } catch (error) {
       console.error('Error in getAllCustomers:', error);
@@ -167,6 +169,25 @@ class CustomerController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch sync history',
+        error: error.message
+      });
+    }
+  }
+
+  // Get duplicate analysis
+  async getDuplicateAnalysis(req, res) {
+    try {
+      const analysis = await databaseService.getDuplicateAnalysis();
+
+      res.json({
+        success: true,
+        data: analysis
+      });
+    } catch (error) {
+      console.error('Error in getDuplicateAnalysis:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch duplicate analysis',
         error: error.message
       });
     }

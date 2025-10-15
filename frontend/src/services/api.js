@@ -19,11 +19,18 @@ api.interceptors.response.use(
 );
 
 export const customerAPI = {
-  // Get all customers
-  getAllCustomers: (params = {}) => api.get('/customers', { params }),
+  // Get all customers with optional pagination and search
+  getAllCustomers: (page = 1, limit = 50, filters = {}) => 
+    api.get('/customers', { 
+      params: { 
+        page, 
+        limit,
+        ...filters
+      } 
+    }),
 
   // Get customer by proposal number
-  getCustomer: (proposalNo) => api.get(`/customers/${proposalNo}`),
+  getCustomer: (proposalNumber) => api.get(`/customers/${proposalNumber}`),
 
   // Upload Excel file
   uploadExcel: (file) => {

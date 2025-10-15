@@ -17,7 +17,10 @@ class ImapService {
         host: process.env.EMAIL_HOST || 'imap.gmail.com',
         port: parseInt(process.env.EMAIL_PORT) || 993,
         tls: process.env.EMAIL_TLS === 'true',
-        tlsOptions: { rejectUnauthorized: false }
+        tlsOptions: { rejectUnauthorized: false },
+        connTimeout: 30000, // 30 seconds connection timeout
+        authTimeout: 30000, // 30 seconds auth timeout
+        keepalive: true
       });
 
       console.log('IMAP client initialized');
@@ -63,13 +66,22 @@ class ImapService {
     });
   }
 
-  // Search for unread emails with attachments
+  // Search for unread emails with attachments from specific sender
   searchUnreadWithAttachments() {
     return new Promise((resolve, reject) => {
-      this.imap.search(['UNSEEN'], (err, results) => {
+      // Fetch emails from October 1, 2025 onwards
+      const startDate = new Date('2025-10-01');
+      
+      // Search for unread emails from ABHICL.MIS@adityabirlahealth.com since Oct 1, 2025
+      this.imap.search([
+        'UNSEEN',
+        ['FROM', 'ABHICL.MIS@adityabirlahealth.com'],
+        ['SINCE', startDate.toDateString()]
+      ], (err, results) => {
         if (err) {
           reject(err);
         } else {
+          console.log(`Found ${results ? results.length : 0} unread emails from ABHICL.MIS@adityabirlahealth.com since ${startDate.toDateString()}`);
           resolve(results || []);
         }
       });
@@ -84,69 +96,77 @@ class ImapService {
       }
 
       const emails = [];
+      const parsePromises = [];
+      
       const fetch = this.imap.fetch(messageIds, {
         bodies: '',
         struct: true
       });
 
       fetch.on('message', (msg, seqno) => {
-        const emailData = {
-          seqno,
-          attachments: []
-        };
+        const emailPromise = new Promise((resolveEmail) => {
+          const emailData = {
+            seqno,
+            attachments: []
+          };
 
-        msg.on('body', (stream) => {
-          let buffer = '';
+          msg.on('body', (stream) => {
+            let buffer = '';
 
-          stream.on('data', (chunk) => {
-            buffer += chunk.toString('utf8');
-          });
+            stream.on('data', (chunk) => {
+              buffer += chunk.toString('utf8');
+            });
 
-          stream.once('end', () => {
-            simpleParser(buffer, async (err, parsed) => {
-              if (err) {
-                console.error('Error parsing email:', err);
-                return;
-              }
+            stream.once('end', () => {
+              simpleParser(buffer, async (err, parsed) => {
+                if (err) {
+                  console.error('Error parsing email:', err);
+                  resolveEmail(null);
+                  return;
+                }
 
-              emailData.subject = parsed.subject;
-              emailData.from = parsed.from ? parsed.from.text : '';
-              emailData.date = parsed.date;
+                emailData.subject = parsed.subject;
+                emailData.from = parsed.from ? parsed.from.text : '';
+                emailData.date = parsed.date;
 
-              // Check for Excel attachments
-              if (parsed.attachments && parsed.attachments.length > 0) {
-                for (const attachment of parsed.attachments) {
-                  // Skip if filename is undefined or null
-                  if (!attachment.filename) {
-                    continue;
-                  }
-                  
-                  const ext = path.extname(attachment.filename).toLowerCase();
-                  if (ext === '.xlsx' || ext === '.xls') {
-                    emailData.attachments.push({
-                      filename: attachment.filename,
-                      content: attachment.content,
-                      contentType: attachment.contentType
-                    });
+                // Check for Excel attachments
+                if (parsed.attachments && parsed.attachments.length > 0) {
+                  for (const attachment of parsed.attachments) {
+                    // Skip if filename is undefined or null
+                    if (!attachment.filename) {
+                      continue;
+                    }
+                    
+                    const ext = path.extname(attachment.filename).toLowerCase();
+                    if (ext === '.xlsx' || ext === '.xls') {
+                      emailData.attachments.push({
+                        filename: attachment.filename,
+                        content: attachment.content,
+                        contentType: attachment.contentType
+                      });
+                    }
                   }
                 }
-              }
 
-              emails.push(emailData);
+                resolveEmail(emailData);
+              });
             });
           });
         });
+
+        parsePromises.push(emailPromise);
       });
 
       fetch.once('error', (err) => {
         reject(err);
       });
 
-      fetch.once('end', () => {
-        // Wait a bit for all parsing to complete
-        setTimeout(() => {
-          resolve(emails);
-        }, 1000);
+      fetch.once('end', async () => {
+        // Wait for all emails to be parsed
+        const parsedEmails = await Promise.all(parsePromises);
+        // Filter out null values (failed parses)
+        const validEmails = parsedEmails.filter(email => email !== null);
+        resolve(validEmails);
       });
     });
   }
@@ -173,9 +193,16 @@ class ImapService {
   async saveAttachment(attachment, uploadFolder) {
     try {
       await fs.ensureDir(uploadFolder);
-      const filePath = path.join(uploadFolder, attachment.filename);
+      
+      // Generate unique filename to avoid collisions
+      const timestamp = Date.now();
+      const ext = path.extname(attachment.filename);
+      const basename = path.basename(attachment.filename, ext);
+      const uniqueFilename = `${basename}_${timestamp}${ext}`;
+      
+      const filePath = path.join(uploadFolder, uniqueFilename);
       await fs.writeFile(filePath, attachment.content);
-      console.log(`Saved attachment: ${attachment.filename}`);
+      console.log(`Saved attachment: ${uniqueFilename}`);
       return filePath;
     } catch (error) {
       console.error(`Error saving attachment ${attachment.filename}:`, error.message);
@@ -203,11 +230,20 @@ class ImapService {
 
       console.log(`Found ${messageIds.length} unread emails`);
 
+      // Limit to process only 20 emails at a time to avoid crashes
+      const BATCH_SIZE = 20;
+      const limitedMessageIds = messageIds.slice(0, BATCH_SIZE);
+      
+      if (messageIds.length > BATCH_SIZE) {
+        console.log(`Processing first ${BATCH_SIZE} emails (${messageIds.length - BATCH_SIZE} remaining)`);
+      }
+
       console.log('Fetching email details...');
-      const emails = await this.fetchEmails(messageIds);
+      const emails = await this.fetchEmails(limitedMessageIds);
 
       const downloadedFiles = [];
 
+      // Save all attachments first
       for (const email of emails) {
         if (email.attachments && email.attachments.length > 0) {
           console.log(`Processing email: ${email.subject}`);
@@ -215,14 +251,21 @@ class ImapService {
           for (const attachment of email.attachments) {
             try {
               const filePath = await this.saveAttachment(attachment, uploadFolder);
-              downloadedFiles.push({
-                filePath,
-                filename: attachment.filename,
-                seqno: email.seqno,
-                subject: email.subject,
-                from: email.from,
-                date: email.date
-              });
+              
+              // Verify file exists before adding to list
+              if (await fs.pathExists(filePath)) {
+                downloadedFiles.push({
+                  filePath,
+                  filename: attachment.filename,
+                  seqno: email.seqno,
+                  subject: email.subject,
+                  from: email.from,
+                  date: email.date
+                });
+                console.log(`✅ Saved and verified: ${attachment.filename}`);
+              } else {
+                console.error(`❌ File not found after save: ${filePath}`);
+              }
             } catch (error) {
               console.error(`Failed to save ${attachment.filename}:`, error.message);
             }
@@ -230,7 +273,9 @@ class ImapService {
         }
       }
 
-      // Mark processed emails as read
+      console.log(`\nTotal files downloaded: ${downloadedFiles.length}`);
+
+      // Mark processed emails as read ONLY if files were successfully downloaded
       if (downloadedFiles.length > 0) {
         const processedSeqnos = [...new Set(downloadedFiles.map(f => f.seqno))];
         await this.markAsRead(processedSeqnos);

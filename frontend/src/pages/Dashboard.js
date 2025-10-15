@@ -150,58 +150,147 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Recent Customers */}
+      {/* All Customer Data - Excel Format */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Customers</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">📊 All Customer Data (Excel Format - All Fields + Duplicate Tracking)</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          ℹ️ Showing all records including duplicates. If a lead was updated 5 times, you'll see 5 rows with version numbers.
+        </p>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+          <table className="w-full text-xs border-collapse">
+            <thead className="bg-gray-800 text-white border-b-2 border-gray-300">
               <tr>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Proposal No</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Customer Name</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Status</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Date</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Last Updated</th>
+                {/* Duplicate Tracking Columns */}
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap sticky left-0 bg-gray-800 z-10">Version</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Duplicate?</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Imported At</th>
+                {/* Column 1-10 */}
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Proposal Number</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Proposer Code</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Proposer Name</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Business Type</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Source Code</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Created Date</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Policy Status</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Sub Status</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Policy Issue Date</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Policy Expiry Date</th>
+                {/* Column 11-20 */}
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Discrepancy Remark</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Product Name</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Branch Code</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Channel</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Lead ID</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">GST Exemption</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">GO GREEN</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Policy No</th>
+                <th className="border border-gray-600 p-2 text-left font-semibold whitespace-nowrap">Number of Members</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Policy Certificate No</th>
+                {/* Column 21-30 */}
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Intermediary Code</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Intermediary Name</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Intermediary Classification</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Sales Manager Code</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Sales Manager Name</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Latest Team Name</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Premium Mode</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Net Premium</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Gross Premium</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Applicable Sum Insured</th>
+                {/* Column 31-40 */}
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Cover Type</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Intimation Ageing</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Intimation Sub Ageing</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Sub Status Ageing</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Sub Status Sub Ageing</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Latest Sub Status Date</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Nationality</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Employee Discount</th>
+                <th className="border border-gray-300 p-2 text-left font-semibold text-gray-700 whitespace-nowrap">Last Updated</th>
               </tr>
             </thead>
             <tbody>
               {stats?.recentCustomers?.length > 0 ? (
-                stats.recentCustomers.map((customer) => (
-                  <tr key={customer._id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 text-sm font-medium text-primary-600">
-                      {customer.proposalNo}
+                stats.recentCustomers.map((customer, idx) => (
+                  <tr key={customer._id} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50`}>
+                    {/* Duplicate Tracking Columns */}
+                    <td className="border border-gray-300 p-2 font-bold text-blue-600 sticky left-0 bg-inherit z-10">
+                      {customer.updateCount || 1}
                     </td>
-                    <td className="p-3 text-sm">{customer.customerName}</td>
-                    <td className="p-3 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          customer.status === 'Active'
-                            ? 'bg-green-100 text-green-800'
-                            : customer.status === 'Pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : customer.status === 'Completed'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {customer.status}
+                    <td className="border border-gray-300 p-2">
+                      {customer.isDuplicate ? (
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">🔄 Duplicate</span>
+                      ) : (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">✨ New</span>
+                      )}
+                    </td>
+                    <td className="border border-gray-300 p-2 text-xs">
+                      {customer.importedAt ? new Date(customer.importedAt).toLocaleString() : '-'}
+                    </td>
+                    {/* Excel Data Columns */}
+                    <td className="border border-gray-300 p-2 font-medium text-primary-600">{customer.proposalNumber}</td>
+                    <td className="border border-gray-300 p-2">{customer.proposerCode}</td>
+                    <td className="border border-gray-300 p-2 font-medium">{customer.proposerName}</td>
+                    <td className="border border-gray-300 p-2">{customer.businessType}</td>
+                    <td className="border border-gray-300 p-2">{customer.sourceCode}</td>
+                    <td className="border border-gray-300 p-2">{customer.createdDate}</td>
+                    <td className="border border-gray-300 p-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                        customer.policyStatus === 'ISSUED' || customer.policyStatus === 'POLICY'
+                          ? 'bg-green-100 text-green-800'
+                          : customer.policyStatus === 'DRAFT'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {customer.policyStatus}
                       </span>
                     </td>
-                    <td className="p-3 text-sm text-gray-600">{customer.date}</td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {new Date(customer.lastUpdated).toLocaleString()}
-                    </td>
+                    <td className="border border-gray-300 p-2">{customer.subStatus}</td>
+                    <td className="border border-gray-300 p-2">{customer.policyIssueDate || '-'}</td>
+                    <td className="border border-gray-300 p-2">{customer.policyExpiryDate || '-'}</td>
+                    <td className="border border-gray-300 p-2">{customer.discrepancyRemark || '-'}</td>
+                    <td className="border border-gray-300 p-2">{customer.productName}</td>
+                    <td className="border border-gray-300 p-2">{customer.branchCode}</td>
+                    <td className="border border-gray-300 p-2">{customer.channel}</td>
+                    <td className="border border-gray-300 p-2">{customer.leadId}</td>
+                    <td className="border border-gray-300 p-2">{customer.gstExemption}</td>
+                    <td className="border border-gray-300 p-2">{customer.goGreen}</td>
+                    <td className="border border-gray-300 p-2">{customer.policyNo || '-'}</td>
+                    <td className="border border-gray-300 p-2">{customer.numberOfMembers || '-'}</td>
+                    <td className="border border-gray-300 p-2">{customer.policyCertificateNo || '-'}</td>
+                    <td className="border border-gray-300 p-2">{customer.intermediaryCode}</td>
+                    <td className="border border-gray-300 p-2">{customer.intermediaryName}</td>
+                    <td className="border border-gray-300 p-2">{customer.intermediaryClassification}</td>
+                    <td className="border border-gray-300 p-2">{customer.salesManagerCode}</td>
+                    <td className="border border-gray-300 p-2">{customer.salesManagerName}</td>
+                    <td className="border border-gray-300 p-2">{customer.latestTeamName}</td>
+                    <td className="border border-gray-300 p-2">{customer.premiumMode}</td>
+                    <td className="border border-gray-300 p-2 text-right font-medium text-green-600">₹{customer.netPremium}</td>
+                    <td className="border border-gray-300 p-2 text-right font-medium text-green-600">₹{customer.grossPremium}</td>
+                    <td className="border border-gray-300 p-2 text-right">₹{customer.applicableSumInsured}</td>
+                    <td className="border border-gray-300 p-2">{customer.coverType}</td>
+                    <td className="border border-gray-300 p-2">{customer.intimationAgeing}</td>
+                    <td className="border border-gray-300 p-2">{customer.intimationSubAgeing}</td>
+                    <td className="border border-gray-300 p-2">{customer.subStatusAgeing}</td>
+                    <td className="border border-gray-300 p-2">{customer.subStatusSubAgeing}</td>
+                    <td className="border border-gray-300 p-2">{customer.latestSubStatusDate}</td>
+                    <td className="border border-gray-300 p-2">{customer.nationality}</td>
+                    <td className="border border-gray-300 p-2">{customer.employeeDiscount}</td>
+                    <td className="border border-gray-300 p-2">{new Date(customer.lastUpdated).toLocaleString()}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">
+                  <td colSpan="39" className="p-8 text-center text-gray-500 border border-gray-300">
                     No customers found. Upload an Excel file or sync with Gmail to get started.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+        <div className="mt-4 text-sm text-gray-600">
+          💡 <strong>Tip:</strong> Scroll horizontally to see all 39 Excel columns. This table shows all data exactly as it appears in your Excel files.
         </div>
       </div>
     </div>

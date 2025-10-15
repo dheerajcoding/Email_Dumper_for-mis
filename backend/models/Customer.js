@@ -12,12 +12,25 @@ const historySchema = new mongoose.Schema({
 });
 
 const customerSchema = new mongoose.Schema({
-  // Primary Key
+  // Primary Key (NO LONGER UNIQUE - allows duplicates to track versions)
   proposalNumber: {
     type: String,
     required: true,
-    unique: true,
     index: true
+  },
+  
+  // Duplicate Tracking
+  updateCount: {
+    type: Number,
+    default: 1
+  },
+  isDuplicate: {
+    type: Boolean,
+    default: false
+  },
+  importedAt: {
+    type: Date,
+    default: Date.now
   },
   
   // Proposer Information

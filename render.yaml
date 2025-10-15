@@ -1,0 +1,46 @@
+services:
+  # Backend API Service
+  - type: web
+    name: emaildumper-backend
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: EMAIL_HOST
+        value: imap.gmail.com
+      - key: EMAIL_PORT
+        value: 993
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: EMAIL_TLS
+        value: true
+      - key: CORS_ORIGIN
+        sync: false
+      - key: UPLOAD_FOLDER
+        value: ./uploads
+      - key: CRON_SCHEDULE
+        value: 0 * * * *
+
+  # Frontend Static Site
+  - type: web
+    name: emaildumper-frontend
+    env: static
+    region: singapore
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    rootDir: frontend
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false

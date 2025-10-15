@@ -6,6 +6,7 @@ const Navbar = () => {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/all-data', label: 'All Data', icon: '📋' },
     { path: '/search', label: 'Search', icon: '🔍' },
     { path: '/upload', label: 'Upload', icon: '📤' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },

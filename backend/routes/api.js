@@ -38,6 +38,7 @@ router.get('/customers', customerController.getAllCustomers);
 router.get('/customers/:proposalNumber', customerController.getCustomerByProposalNo);
 router.post('/upload', upload.single('file'), customerController.uploadExcel);
 router.get('/dashboard/stats', customerController.getDashboardStats);
+router.get('/dashboard/duplicates', customerController.getDuplicateAnalysis);
 router.get('/export', customerController.exportCustomers);
 router.get('/sync/history', customerController.getSyncHistory);
 

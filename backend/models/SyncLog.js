@@ -31,7 +31,8 @@ const syncLogSchema = new mongoose.Schema({
     default: []
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  suppressReservedKeysWarning: true // Suppress warning for 'errors' field
 });
 
 module.exports = mongoose.model('SyncLog', syncLogSchema);
